@@ -1,5 +1,3 @@
-# Financial-Tracker
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
