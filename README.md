@@ -114,44 +114,42 @@
     }
   }
 
-  function downloadCSV() {
-    let csv = "Date,Transfer,Paid By,Shipping,Paid By,Clearance,Paid By,Receivable,Stock,To be Collected\n";
-    let sumTransfer = 0, sumShipping = 0, sumClearance = 0;
-    let sumReceivable = 0, sumStock = 0, sumCollected = 0;
+function downloadCSV() {
+  let csv = "Date,Transfer,Paid By (T),Shipping,Paid By (S),Clearance,Paid By (C),Receivable,Stock,To be Collected\n";
+  let sumTransfer = 0, sumShipping = 0, sumClearance = 0;
+  let sumReceivable = 0, sumStock = 0, sumCollected = 0;
 
-    entries.forEach(e => {
-      csv += `${e.date},${e.transfer},${e.transferBy},${e.shipping},${e.shippingBy},${e.clearance},${e.clearanceBy},${e.receivable},${e.stock},${e.collected}\n`;
-      sumTransfer += e.transfer;
-      sumShipping += e.shipping;
-      sumClearance += e.clearance;
-      sumReceivable += e.receivable;
-      sumStock += e.stock;
-      sumCollected += e.collected;
-    });
+  entries.forEach(e => {
+    csv += `${e.date},${e.transfer},${e.transferBy},${e.shipping},${e.shippingBy},${e.clearance},${e.clearanceBy},${e.receivable},${e.stock},${e.collected}\n`;
+    sumTransfer += e.transfer;
+    sumShipping += e.shipping;
+    sumClearance += e.clearance;
+    sumReceivable += e.receivable;
+    sumStock += e.stock;
+    sumCollected += e.collected;
+  });
 
-    const totalOut = sumTransfer + sumShipping + sumClearance;
-    const totalIn = sumReceivable + sumStock + sumCollected;
-    const net = totalIn - totalOut;
+  const totalOut = sumTransfer + sumShipping + sumClearance;
+  const totalIn = sumReceivable + sumStock + sumCollected;
+  const net = totalIn - totalOut;
 
-    csv += "\n";
-    csv += `Total Amount Transferred,${sumTransfer}\n`;
-    csv += `Total Shipping Fees,${sumShipping}\n`;
-    csv += `Total Clearance Fees,${sumClearance}\n`;
-    csv += `Grand Total (Outgoing),${totalOut}\n\n`;
+  csv += "\n"; // Space before totals
 
-    csv += `Total Receivable,${sumReceivable}\n`;
-    csv += `Total Stock,${sumStock}\n`;
-    csv += `Total To be Collected,${sumCollected}\n`;
-    csv += `Grand Total (Incoming),${totalIn}\n\n`;
+  // Totals row in correct columns
+  csv += `Grand Total (Outgoing Totals),${sumTransfer},,,${sumShipping},,,${sumClearance}\n`;
+  csv += `Grand Total (Incoming Totals),,,,,,,${sumReceivable},${sumStock},${sumCollected}\n`;
 
-    csv += `Net Total (Incoming - Outgoing),${net}\n`;
+  // Net difference row
+  csv += `,,,,,,\n`;
+  csv += `Net Total (Incoming - Outgoing),,,,,,,${net}\n`;
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "business_data.csv";
-    link.click();
-  }
+  // Create and download the file
+  const blob = new Blob([csv], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "business_data.csv";
+  link.click();
+}
 
   if (entries.length) {
     renderTable();
