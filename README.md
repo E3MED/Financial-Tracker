@@ -14,6 +14,7 @@
 </head>
 <body>
 
+<!-- 🔐 Login Section -->
 <div id="loginSection">
   <h2>🔒 Login</h2>
   <input type="text" id="username" placeholder="User Name" /><br>
@@ -22,6 +23,7 @@
   <p id="loginMessage" style="color: red;"></p>
 </div>
 
+<!-- 📊 App Section -->
 <div id="appSection" style="display:none;">
   <h2>📊 Business Entry Tracker</h2>
   <form id="entryForm">
@@ -39,7 +41,7 @@
   </form>
 
   <h3>📂 Saved Entries</h3>
-  <table border="1" id="entryTable" cellpadding="5">
+  <table id="entryTable">
     <thead>
       <tr>
         <th>Date</th><th>Transfer</th><th>Paid By</th>
@@ -114,42 +116,39 @@
     }
   }
 
-function downloadCSV() {
-  let csv = "Date,Transfer,Paid By (T),Shipping,Paid By (S),Clearance,Paid By (C),Receivable,Stock,To be Collected\n";
-  let sumTransfer = 0, sumShipping = 0, sumClearance = 0;
-  let sumReceivable = 0, sumStock = 0, sumCollected = 0;
+  function downloadCSV() {
+    let csv = "Date,Transfer,Paid By (T),Shipping,Paid By (S),Clearance,Paid By (C),Receivable,Stock,To be Collected\n";
+    let sumTransfer = 0, sumShipping = 0, sumClearance = 0;
+    let sumReceivable = 0, sumStock = 0, sumCollected = 0;
 
-  entries.forEach(e => {
-    csv += `${e.date},${e.transfer},${e.transferBy},${e.shipping},${e.shippingBy},${e.clearance},${e.clearanceBy},${e.receivable},${e.stock},${e.collected}\n`;
-    sumTransfer += e.transfer;
-    sumShipping += e.shipping;
-    sumClearance += e.clearance;
-    sumReceivable += e.receivable;
-    sumStock += e.stock;
-    sumCollected += e.collected;
-  });
+    entries.forEach(e => {
+      csv += `${e.date},${e.transfer},${e.transferBy},${e.shipping},${e.shippingBy},${e.clearance},${e.clearanceBy},${e.receivable},${e.stock},${e.collected}\n`;
+      sumTransfer += e.transfer;
+      sumShipping += e.shipping;
+      sumClearance += e.clearance;
+      sumReceivable += e.receivable;
+      sumStock += e.stock;
+      sumCollected += e.collected;
+    });
 
-  const totalOut = sumTransfer + sumShipping + sumClearance;
-  const totalIn = sumReceivable + sumStock + sumCollected;
-  const net = totalIn - totalOut;
+    const totalOut = sumTransfer + sumShipping + sumClearance;
+    const totalIn = sumReceivable + sumStock + sumCollected;
+    const net = totalIn - totalOut;
 
-  csv += "\n"; // Space before totals
+    csv += "\n"; // Empty line before summary
 
-  // Totals row in correct columns
-  csv += `Grand Total (Outgoing Totals),${sumTransfer},,,${sumShipping},,,${sumClearance}\n`;
-  csv += `Grand Total (Incoming Totals),,,,,,,${sumReceivable},${sumStock},${sumCollected}\n`;
+    // Totals under their correct columns
+    csv += `Grand Total (Outgoing Totals),${sumTransfer},,,${sumShipping},,,${sumClearance}\n`;
+    csv += `Grand Total (Incoming Totals),,,,,,,${sumReceivable},${sumStock},${sumCollected}\n`;
+    csv += `,,,,,,,\n`;
+    csv += `Net Total (Incoming - Outgoing),,,,,,,${net}\n`;
 
-  // Net difference row
-  csv += `,,,,,,\n`;
-  csv += `Net Total (Incoming - Outgoing),,,,,,,${net}\n`;
-
-  // Create and download the file
-  const blob = new Blob([csv], { type: "text/csv" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "business_data.csv";
-  link.click();
-}
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "business_data.csv";
+    link.click();
+  }
 
   if (entries.length) {
     renderTable();
