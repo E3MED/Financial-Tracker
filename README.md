@@ -3,10 +3,12 @@
   <meta charset="UTF-8" />
   <title>Business Entry Tracker</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
     input, select { margin: 5px; padding: 8px; width: 250px; }
-    button { margin-top: 10px; padding: 10px 15px; cursor: pointer; }
-    h2 { color: #333; }
+    button { margin-top: 10px; padding: 8px 14px; cursor: pointer; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: center; font-size: 14px; }
+    h2, h3 { color: #333; }
   </style>
 </head>
 <body>
@@ -37,6 +39,18 @@
       <button type="button" onclick="saveEntry()">Save Entry</button>
       <button type="button" onclick="downloadCSV()">Download Excel</button>
     </form>
+
+    <h3>📂 Saved Entries</h3>
+    <table border="1" id="entryTable" cellpadding="5">
+      <thead>
+        <tr>
+          <th>Date</th><th>Transfer</th><th>Paid By</th><th>Shipping</th><th>Paid By</th>
+          <th>Clearance</th><th>Paid By</th><th>Receivable</th><th>Stock</th><th>Debts</th>
+          <th>To Collect</th><th>Delete</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
   <script>
@@ -48,6 +62,7 @@
       if (user === "e3med" && pass === "e3med2025+") {
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("appSection").style.display = "block";
+        renderTable();
       } else {
         document.getElementById("loginMessage").textContent = "Incorrect username or password.";
       }
@@ -70,6 +85,34 @@
       entries.push(data);
       localStorage.setItem("entries", JSON.stringify(entries));
       alert("✅ Entry saved!");
+      renderTable();
+      document.getElementById("entryForm").reset();
+    }
+
+    function renderTable() {
+      const tbody = document.querySelector("#entryTable tbody");
+      tbody.innerHTML = "";
+      entries.forEach((e, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${e.date}</td>
+          <td>${e.transfer}</td><td>${e.transferBy}</td>
+          <td>${e.shipping}</td><td>${e.shippingBy}</td>
+          <td>${e.clearance}</td><td>${e.clearanceBy}</td>
+          <td>${e.receivable}</td><td>${e.stock}</td>
+          <td>${e.debts}</td><td>${e.collected}</td>
+          <td><button onclick="deleteEntry(${index})">🗑️</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function deleteEntry(index) {
+      if (confirm("Are you sure you want to delete this entry?")) {
+        entries.splice(index, 1);
+        localStorage.setItem("entries", JSON.stringify(entries));
+        renderTable();
+      }
     }
 
     function downloadCSV() {
@@ -82,6 +125,11 @@
       link.href = URL.createObjectURL(blob);
       link.download = "business_data.csv";
       link.click();
+    }
+
+    // Auto-load table if entries exist and user is logged in (optional)
+    if (entries.length) {
+      renderTable();
     }
   </script>
 </body>
