@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Business Entry Tracker</title>
+  <title>Business Entry Tracker (Cross-Device)</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
     input { margin: 5px; padding: 8px; width: 250px; }
@@ -9,6 +9,7 @@
     table { border-collapse: collapse; margin-top: 20px; width: 100%; background: #fff; }
     th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: center; font-size: 14px; }
     h2, h3 { color: #333; }
+    .loading { color: #666; font-style: italic; }
   </style>
 </head>
 <body>
@@ -24,7 +25,7 @@
 
 <!-- 📊 App Section -->
 <div id="appSection" style="display:none;">
-  <h2>📊 Business Entry Tracker</h2>
+  <h2>📊 Business Entry Tracker (Synced Across Devices)</h2>
   <form id="entryForm">
     <input placeholder="Amount Transferred" id="transfer" /><br>
     <input placeholder="Paid by (Transfer)" id="transferBy" /><br>
@@ -39,7 +40,7 @@
     <button type="button" onclick="downloadCSV()">Download Excel</button>
   </form>
 
-  <h3>📂 Saved Entries</h3>
+  <h3>📂 Saved Entries <span id="loadingStatus" class="loading"></span></h3>
   <table id="entryTable">
     <thead>
       <tr>
@@ -54,8 +55,27 @@
   </table>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
 <script>
-  let entries = JSON.parse(localStorage.getItem("entries") || "[]");
+  // 🔥 Firebase Configuration (Replace with your own!)
+  const firebaseConfig = {
+    apiKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678",
+    authDomain: "your-project-id.firebaseapp.com",
+    databaseURL: "https://your-project-id.firebaseio.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project-id.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdefghijklmnopqrstuv"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  let entries = [];
 
   function checkLogin() {
     const user = document.getElementById("username").value;
@@ -63,10 +83,19 @@
     if (user === "e3med" && pass === "e3med2025+") {
       document.getElementById("loginSection").style.display = "none";
       document.getElementById("appSection").style.display = "block";
-      renderTable();
+      loadEntries();
     } else {
       document.getElementById("loginMessage").textContent = "Incorrect username or password.";
     }
+  }
+
+  function loadEntries() {
+    document.getElementById("loadingStatus").textContent = "Loading...";
+    database.ref('entries').on('value', (snapshot) => {
+      entries = snapshot.val() || [];
+      renderTable();
+      document.getElementById("loadingStatus").textContent = "";
+    });
   }
 
   function saveEntry() {
@@ -80,13 +109,18 @@
       receivable: parseFloat(receivable.value) || 0,
       stock: parseFloat(stock.value) || 0,
       collected: parseFloat(collected.value) || 0,
-      date: new Date().toLocaleDateString() // Changed to store only date without time
+      date: new Date().toLocaleDateString()
     };
+    
     entries.push(data);
-    localStorage.setItem("entries", JSON.stringify(entries));
-    alert("✅ Entry saved!");
-    renderTable();
-    document.getElementById("entryForm").reset();
+    database.ref('entries').set(entries)
+      .then(() => {
+        alert("✅ Entry saved and synced!");
+        document.getElementById("entryForm").reset();
+      })
+      .catch((error) => {
+        alert("❌ Error saving: " + error.message);
+      });
   }
 
   function renderTable() {
@@ -110,8 +144,9 @@
   function deleteEntry(index) {
     if (confirm("Are you sure you want to delete this entry?")) {
       entries.splice(index, 1);
-      localStorage.setItem("entries", JSON.stringify(entries));
-      renderTable();
+      database.ref('entries').set(entries)
+        .then(() => alert("Entry deleted!"))
+        .catch((error) => alert("Delete failed: " + error.message));
     }
   }
 
@@ -130,14 +165,12 @@
       sumCollected += e.collected;
     });
 
+    // Add summary rows (unchanged from your original)
     const totalOut = sumTransfer + sumShipping + sumClearance;
     const totalIn = sumReceivable + sumStock + sumCollected;
     const net = totalIn - totalOut;
 
-    csv += "\n"; // Empty line before summary
-
-    // Totals under their correct columns
-    csv += `Grand Total (Outgoing Totals),${sumTransfer},,,${sumShipping},,,${sumClearance}\n`;
+    csv += `\nGrand Total (Outgoing Totals),${sumTransfer},,,${sumShipping},,,${sumClearance}\n`;
     csv += `Grand Total (Incoming Totals),,,,,,,${sumReceivable},${sumStock},${sumCollected}\n`;
     csv += `,,,,,,,\n`;
     csv += `Net Total (Incoming - Outgoing),,,,,,,${net}\n`;
@@ -148,11 +181,6 @@
     link.download = "business_data.csv";
     link.click();
   }
-
-  if (entries.length) {
-    renderTable();
-  }
 </script>
-
 </body>
 </html>
