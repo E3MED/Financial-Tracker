@@ -1,46 +1,46 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Business Entry Tracker (Cross-Device)</title>
+  <meta charset="UTF-8">
+  <title>Business Tracker (Firebase)</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
     input { margin: 5px; padding: 8px; width: 250px; }
-    button { margin-top: 10px; padding: 8px 14px; cursor: pointer; }
-    table { border-collapse: collapse; margin-top: 20px; width: 100%; background: #fff; }
-    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: center; font-size: 14px; }
-    h2, h3 { color: #333; }
-    .loading { color: #666; font-style: italic; }
+    button { padding: 8px 14px; margin: 5px; cursor: pointer; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    #loadingStatus { color: #666; font-style: italic; }
   </style>
 </head>
 <body>
 
-<!-- 🔐 Login Section -->
+<!-- Login Section -->
 <div id="loginSection">
-  <h2>🔒 Login</h2>
-  <input type="text" id="username" placeholder="User Name" /><br>
-  <input type="password" id="password" placeholder="Password" /><br>
+  <h2>🔐 Login</h2>
+  <input type="text" id="username" placeholder="Username" value="e3med"><br>
+  <input type="password" id="password" placeholder="Password" value="e3med2025+"><br>
   <button onclick="checkLogin()">Login</button>
-  <p id="loginMessage" style="color: red;"></p>
+  <p id="loginMessage" style="color:red;"></p>
 </div>
 
-<!-- 📊 App Section -->
+<!-- Main App -->
 <div id="appSection" style="display:none;">
-  <h2>📊 Business Entry Tracker (Synced Across Devices)</h2>
+  <h2>📊 Business Tracker</h2>
   <form id="entryForm">
-    <input placeholder="Amount Transferred" id="transfer" /><br>
-    <input placeholder="Paid by (Transfer)" id="transferBy" /><br>
-    <input placeholder="Shipping Fees" id="shipping" /><br>
-    <input placeholder="Paid by (Shipping)" id="shippingBy" /><br>
-    <input placeholder="Clearance Fees" id="clearance" /><br>
-    <input placeholder="Paid by (Clearance)" id="clearanceBy" /><br>
-    <input placeholder="Receivable" id="receivable" /><br>
-    <input placeholder="Stock" id="stock" /><br>
-    <input placeholder="To be Collected" id="collected" /><br>
+    <input placeholder="Amount Transferred" id="transfer"><br>
+    <input placeholder="Paid by (Transfer)" id="transferBy"><br>
+    <input placeholder="Shipping Fees" id="shipping"><br>
+    <input placeholder="Paid by (Shipping)" id="shippingBy"><br>
+    <input placeholder="Clearance Fees" id="clearance"><br>
+    <input placeholder="Paid by (Clearance)" id="clearanceBy"><br>
+    <input placeholder="Receivable" id="receivable"><br>
+    <input placeholder="Stock" id="stock"><br>
+    <input placeholder="To be Collected" id="collected"><br>
     <button type="button" onclick="saveEntry()">Save Entry</button>
     <button type="button" onclick="downloadCSV()">Download Excel</button>
   </form>
 
-  <h3>📂 Saved Entries <span id="loadingStatus" class="loading"></span></h3>
+  <h3>📂 Entries <span id="loadingStatus"></span></h3>
   <table id="entryTable">
     <thead>
       <tr>
@@ -60,126 +60,114 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
 
 <script>
-  // 🔥 Firebase Configuration (Replace with your own!)
+  // ✅ Replace with YOUR Firebase config (see setup instructions below)
   const firebaseConfig = {
-    apiKey: "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678",
+    apiKey: "AIzaSyA1B2C3d4E5F6G7H8I9J0K1L2M3N4O5P6Q",
     authDomain: "your-project-id.firebaseapp.com",
     databaseURL: "https://your-project-id.firebaseio.com",
     projectId: "your-project-id",
     storageBucket: "your-project-id.appspot.com",
     messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdefghijklmnopqrstuv"
+    appId: "1:123456789012:web:abc123def456ghi789jkl"
   };
 
   // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
   let entries = [];
 
-  function checkLogin() {
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
-    if (user === "e3med" && pass === "e3med2025+") {
-      document.getElementById("loginSection").style.display = "none";
-      document.getElementById("appSection").style.display = "block";
-      loadEntries();
-    } else {
-      document.getElementById("loginMessage").textContent = "Incorrect username or password.";
-    }
-  }
-
+  // 🔄 Load entries from Firebase
   function loadEntries() {
-    document.getElementById("loadingStatus").textContent = "Loading...";
-    database.ref('entries').on('value', (snapshot) => {
+    document.getElementById('loadingStatus').textContent = "Loading...";
+    db.ref('businessEntries').on('value', (snapshot) => {
       entries = snapshot.val() || [];
       renderTable();
-      document.getElementById("loadingStatus").textContent = "";
+      document.getElementById('loadingStatus').textContent = "";
+    }, (error) => {
+      console.error("Firebase error:", error);
+      document.getElementById('loadingStatus').textContent = "Error loading data!";
     });
   }
 
-  function saveEntry() {
-    const data = {
-      transfer: parseFloat(transfer.value) || 0,
-      transferBy: transferBy.value,
-      shipping: parseFloat(shipping.value) || 0,
-      shippingBy: shippingBy.value,
-      clearance: parseFloat(clearance.value) || 0,
-      clearanceBy: clearanceBy.value,
-      receivable: parseFloat(receivable.value) || 0,
-      stock: parseFloat(stock.value) || 0,
-      collected: parseFloat(collected.value) || 0,
-      date: new Date().toLocaleDateString()
-    };
+  function checkLogin() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
     
-    entries.push(data);
-    database.ref('entries').set(entries)
+    if (username === "e3med" && password === "e3med2025+") {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('appSection').style.display = 'block';
+      loadEntries();
+    } else {
+      document.getElementById('loginMessage').textContent = "Invalid credentials!";
+    }
+  }
+
+  function saveEntry() {
+    const newEntry = {
+      date: new Date().toLocaleDateString(),
+      transfer: parseFloat(document.getElementById('transfer').value) || 0,
+      transferBy: document.getElementById('transferBy').value,
+      shipping: parseFloat(document.getElementById('shipping').value) || 0,
+      shippingBy: document.getElementById('shippingBy').value,
+      clearance: parseFloat(document.getElementById('clearance').value) || 0,
+      clearanceBy: document.getElementById('clearanceBy').value,
+      receivable: parseFloat(document.getElementById('receivable').value) || 0,
+      stock: parseFloat(document.getElementById('stock').value) || 0,
+      collected: parseFloat(document.getElementById('collected').value) || 0
+    };
+
+    entries.push(newEntry);
+    db.ref('businessEntries').set(entries)
       .then(() => {
-        alert("✅ Entry saved and synced!");
-        document.getElementById("entryForm").reset();
+        alert('Entry saved successfully!');
+        document.getElementById('entryForm').reset();
       })
-      .catch((error) => {
-        alert("❌ Error saving: " + error.message);
+      .catch(error => {
+        alert('Error saving: ' + error.message);
       });
   }
 
+  function deleteEntry(index) {
+    if (confirm('Delete this entry?')) {
+      entries.splice(index, 1);
+      db.ref('businessEntries').set(entries)
+        .catch(error => alert('Delete failed: ' + error.message));
+    }
+  }
+
   function renderTable() {
-    const tbody = document.querySelector("#entryTable tbody");
-    tbody.innerHTML = "";
-    entries.forEach((e, index) => {
-      const row = document.createElement("tr");
+    const tbody = document.querySelector('#entryTable tbody');
+    tbody.innerHTML = '';
+    
+    entries.forEach((entry, index) => {
+      const row = document.createElement('tr');
       row.innerHTML = `
-        <td>${e.date}</td>
-        <td>${e.transfer}</td><td>${e.transferBy}</td>
-        <td>${e.shipping}</td><td>${e.shippingBy}</td>
-        <td>${e.clearance}</td><td>${e.clearanceBy}</td>
-        <td>${e.receivable}</td><td>${e.stock}</td>
-        <td>${e.collected}</td>
+        <td>${entry.date}</td>
+        <td>${entry.transfer}</td><td>${entry.transferBy}</td>
+        <td>${entry.shipping}</td><td>${entry.shippingBy}</td>
+        <td>${entry.clearance}</td><td>${entry.clearanceBy}</td>
+        <td>${entry.receivable}</td><td>${entry.stock}</td>
+        <td>${entry.collected}</td>
         <td><button onclick="deleteEntry(${index})">🗑️</button></td>
       `;
       tbody.appendChild(row);
     });
   }
 
-  function deleteEntry(index) {
-    if (confirm("Are you sure you want to delete this entry?")) {
-      entries.splice(index, 1);
-      database.ref('entries').set(entries)
-        .then(() => alert("Entry deleted!"))
-        .catch((error) => alert("Delete failed: " + error.message));
-    }
-  }
-
   function downloadCSV() {
-    let csv = "Date,Transfer,Paid By (T),Shipping,Paid By (S),Clearance,Paid By (C),Receivable,Stock,To be Collected\n";
-    let sumTransfer = 0, sumShipping = 0, sumClearance = 0;
-    let sumReceivable = 0, sumStock = 0, sumCollected = 0;
-
-    entries.forEach(e => {
-      csv += `${e.date},${e.transfer},${e.transferBy},${e.shipping},${e.shippingBy},${e.clearance},${e.clearanceBy},${e.receivable},${e.stock},${e.collected}\n`;
-      sumTransfer += e.transfer;
-      sumShipping += e.shipping;
-      sumClearance += e.clearance;
-      sumReceivable += e.receivable;
-      sumStock += e.stock;
-      sumCollected += e.collected;
+    let csv = "Date,Transfer,Paid By,Shipping,Paid By,Clearance,Paid By,Receivable,Stock,To Collect\n";
+    
+    entries.forEach(entry => {
+      csv += `${entry.date},${entry.transfer},"${entry.transferBy}",${entry.shipping},"${entry.shippingBy}",${entry.clearance},"${entry.clearanceBy}",${entry.receivable},${entry.stock},${entry.collected}\n`;
     });
 
-    // Add summary rows (unchanged from your original)
-    const totalOut = sumTransfer + sumShipping + sumClearance;
-    const totalIn = sumReceivable + sumStock + sumCollected;
-    const net = totalIn - totalOut;
-
-    csv += `\nGrand Total (Outgoing Totals),${sumTransfer},,,${sumShipping},,,${sumClearance}\n`;
-    csv += `Grand Total (Incoming Totals),,,,,,,${sumReceivable},${sumStock},${sumCollected}\n`;
-    csv += `,,,,,,,\n`;
-    csv += `Net Total (Incoming - Outgoing),,,,,,,${net}\n`;
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "business_data.csv";
-    link.click();
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'business_data.csv';
+    a.click();
   }
 </script>
 </body>
