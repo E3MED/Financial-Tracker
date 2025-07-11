@@ -187,25 +187,22 @@ const analytics = getAnalytics(app);
 
 
 function checkLogin() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value.trim(); // Add .trim()
+    const password = document.getElementById('password').value.trim(); // Add .trim()
 
-    // --- ADD THESE LINES FOR DEBUGGING ---
-    console.log("Entered Username:", username);
-    console.log("Entered Password:", password);
+    console.log("Entered Username (trimmed):", username); // Changed console.log
+    console.log("Entered Password (trimmed):", password); // Changed console.log
     console.log("Expected Username:", "e3med");
     console.log("Expected Password:", "e3med2025+");
-    // ------------------------------------
 
     if (username === "e3med" && password === "e3med2025+") {
+        console.log("Login successful!");
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('appSection').style.display = 'block';
         loadEntries();
     } else {
         document.getElementById('loginMessage').textContent = "Invalid credentials!";
-        // --- ADD THIS LINE FOR DEBUGGING ---
-        console.log("Login failed.");
-        // ------------------------------------
+        console.log("Login failed: Mismatch in credentials.");
     }
 }
 
